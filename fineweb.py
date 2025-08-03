@@ -24,7 +24,7 @@ DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), local_dir)
 os.makedirs(DATA_CACHE_DIR, exist_ok=True)
 
 # download the dataset
-fw = load_dataset("HuggingFaceFW/fineweb-edu", name=remote_name, split="train")
+fw = load_dataset("HuggingFaceFW/fineweb-edu", name=remote_name, split="train", cache_dir="/work/cuiop25/hf_cache")
 
 # init the tokenizer
 enc = tiktoken.get_encoding("gpt2")
@@ -42,7 +42,8 @@ def write_datafile(filename, tokens_np):
     np.save(filename, tokens_np)
 
 # tokenize all documents and write output shards, each of shard_size tokens (last shard has remainder)
-nprocs = max(1, os.cpu_count()//2)
+# nprocs = max(1, os.cpu_count()//2)
+nprocs = min(int(os.environ.get("SLURM_CPUS_ON_NODE", os.cpu_count())), os.cpu_count())
 with mp.Pool(nprocs) as pool:
     shard_index = 0
     # preallocate buffer to hold current shard
